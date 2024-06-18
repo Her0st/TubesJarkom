@@ -25,7 +25,7 @@ public class Client {
         textField.setBackground(textFieldColor);
         textField.setForeground(textColor);
         textField.setFont(font);
-        
+
         messageArea.setEditable(false);
         messageArea.setBackground(backgroundColor);
         messageArea.setForeground(textColor);
@@ -72,11 +72,28 @@ public class Client {
         userPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(textColor), "Users in Room", 0, 0, font, textColor));
         userPanel.setBackground(backgroundColor);
 
-        JPanel refreshPanel = new JPanel();
-        refreshPanel.setLayout(new BorderLayout());
-        refreshPanel.setBackground(backgroundColor);
-        refreshPanel.setSize(new Dimension(10,10));
+        // Panel for buttons
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new GridLayout(1, 3, 10, 10));
+        buttonPanel.setBackground(backgroundColor);
+        JButton createRoomButton = new JButton("Create Room");
+        JButton joinRoomButton = new JButton("Join Room");
+        JButton leaveRoomButton = new JButton("Leave Room");
+        buttonPanel.add(createRoomButton);
+        buttonPanel.add(joinRoomButton);
+        buttonPanel.add(leaveRoomButton);
+        inputPanel.add(buttonPanel, BorderLayout.NORTH);
 
+        JPanel roomButtonPanel = new JPanel();
+        roomButtonPanel.setLayout(new GridLayout(3, 1, 10, 10));
+        roomButtonPanel.setBackground(backgroundColor);
+        JButton refreshRoomButton = new JButton("Refresh");
+        JButton closeRoomButton = new JButton("Close Room");
+        JButton kickUserButton = new JButton("Kick User");
+        roomButtonPanel.add(refreshRoomButton);
+        roomButtonPanel.add(closeRoomButton);
+        roomButtonPanel.add(kickUserButton);
+        roomPanel.add(roomButtonPanel, BorderLayout.SOUTH);
 
         // Add panels to frame
         frame.getContentPane().add(refreshPanel, BorderLayout.NORTH);
@@ -97,31 +114,34 @@ public class Client {
             }
         });
 
-        // Buttons for creating and joining rooms
-        JButton createRoomButton = new JButton("Create Room");
+        // Action listeners for buttons
         createRoomButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 showCreateRoomDialog();
             }
         });
 
-        JButton joinRoomButton = new JButton("Join Room");
         joinRoomButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 showJoinRoomDialog();
             }
         });
 
-        JButton refreshRoomButton = new JButton("Refresh");
-        refreshRoomButton.addActionListener(new ActionListener(){
-            public void actionPerformed(ActionEvent e){
+        leaveRoomButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                out.println("/leave");
+            }
+        });
+
+        refreshRoomButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
                 out.println("/refresh");
             };
         });
 
         inputPanel.add(createRoomButton, BorderLayout.WEST);
         inputPanel.add(joinRoomButton, BorderLayout.EAST);
-        refreshPanel.add(refreshRoomButton, BorderLayout.CENTER);
+        roomPanel.add(refreshRoomButton, BorderLayout.EAST);
     }
 
     private String getServerAddress() {
@@ -175,6 +195,20 @@ public class Client {
         String roomName = JOptionPane.showInputDialog(frame, "Enter room name:", "Join Room", JOptionPane.PLAIN_MESSAGE);
         if (roomName != null && !roomName.trim().isEmpty()) {
             out.println("/join " + roomName);
+        }
+    }
+
+    private void showCloseRoomDialog() {
+        String roomName = JOptionPane.showInputDialog(frame, "Enter room name to close:", "Close Room", JOptionPane.PLAIN_MESSAGE);
+        if (roomName != null && !roomName.trim().isEmpty()) {
+            out.println("/close " + roomName);
+        }
+    }
+
+    private void showKickUserDialog() {
+        String userName = JOptionPane.showInputDialog(frame, "Enter user name to kick:", "Kick User", JOptionPane.PLAIN_MESSAGE);
+        if (userName != null && !userName.trim().isEmpty()) {
+            out.println("/kick " + userName);
         }
     }
 
