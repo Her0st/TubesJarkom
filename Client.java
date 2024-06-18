@@ -72,7 +72,14 @@ public class Client {
         userPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(textColor), "Users in Room", 0, 0, font, textColor));
         userPanel.setBackground(backgroundColor);
 
+        JPanel refreshPanel = new JPanel();
+        refreshPanel.setLayout(new BorderLayout());
+        refreshPanel.setBackground(backgroundColor);
+        refreshPanel.setSize(new Dimension(10,10));
+
+
         // Add panels to frame
+        frame.getContentPane().add(refreshPanel, BorderLayout.NORTH);
         frame.getContentPane().add(inputPanel, BorderLayout.SOUTH);
         frame.getContentPane().add(chatPanel, BorderLayout.CENTER);
         frame.getContentPane().add(roomPanel, BorderLayout.EAST);
@@ -114,7 +121,7 @@ public class Client {
 
         inputPanel.add(createRoomButton, BorderLayout.WEST);
         inputPanel.add(joinRoomButton, BorderLayout.EAST);
-        roomPanel.add(refreshRoomButton, BorderLayout.EAST);
+        refreshPanel.add(refreshRoomButton, BorderLayout.CENTER);
     }
 
     private String getServerAddress() {
