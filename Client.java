@@ -161,13 +161,7 @@ public class Client {
         });
     }
 
-    private String getServerAddress() {
-        return JOptionPane.showInputDialog(
-                frame,
-                "Enter IP Address of the Server:",
-                "Welcome to the Chat Room",
-                JOptionPane.QUESTION_MESSAGE);
-    }
+
 
     private String getName() {
         return JOptionPane.showInputDialog(
@@ -179,7 +173,7 @@ public class Client {
 
     private void run() throws IOException {
         // Connect to the server
-        String serverAddress = getServerAddress();
+        String serverAddress = InetAddress.getLocalHost().getHostAddress();
         Socket socket = new Socket(serverAddress, 5000);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
