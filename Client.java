@@ -75,14 +75,16 @@ public class Client {
 
         // Panel for buttons
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new GridLayout(1, 3, 10, 10));
+        buttonPanel.setLayout(new GridLayout(1, 4, 10, 10));
         buttonPanel.setBackground(backgroundColor);
         JButton createRoomButton = new JButton("Create Room");
         JButton joinRoomButton = new JButton("Join Room");
         JButton leaveRoomButton = new JButton("Leave Room");
+        JButton logoutButton = new JButton("Logout");
         buttonPanel.add(createRoomButton);
         buttonPanel.add(joinRoomButton);
         buttonPanel.add(leaveRoomButton);
+        buttonPanel.add(logoutButton);
         inputPanel.add(buttonPanel, BorderLayout.NORTH);
 
         JPanel roomButtonPanel = new JPanel();
@@ -159,7 +161,15 @@ public class Client {
                 out.println("/refresh");
             }
         });
+
+        logoutButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                out.println("/logout");
+            }
+        });
     }
+
+
     private String getName() {
         return JOptionPane.showInputDialog(
                 frame,
@@ -178,19 +188,44 @@ public class Client {
         // Process all messages from the server
         while (true) {
             String line = in.readLine();
-            if (line.startsWith("SUBMITNAME")) {
-                out.println(getName());
-            } else if (line.startsWith("NAMEACCEPTED")) {
-                textField.setEditable(true);
-            } else if (line.startsWith("MESSAGE")) {
-                messageArea.append(line.substring(8) + "\n");
-            } else if (line.startsWith("USERLIST")) {
-                userArea.setText(line.substring(9).replace(",", "\n"));
-            } else if (line.startsWith("ROOMLIST")) {
-                updateRoomList(line.substring(9));
-            } else {
-                JOptionPane.showMessageDialog(frame, line, "Error", JOptionPane.ERROR_MESSAGE);
+            if(line != null){
+                if (line.startsWith("SUBMITNAME")) {
+                    out.println(getName());
+                } else if (line.startsWith("NAMEACCEPTED")) {
+                    textField.setEditable(true);
+                } else if (line.startsWith("MESSAGE")) {
+                    messageArea.append(line.substring(8) + "\n");
+                } else if (line.startsWith("USERLIST")) {
+                    userArea.setText(line.substring(9).replace(",", "\n"));
+                } else if (line.startsWith("ROOMLIST")) {
+                    updateRoomList(line.substring(9));
+                } else if (line.startsWith("LOGOUT")) {
+                    resetClient();
+                    break;
+                } else {
+                    JOptionPane.showMessageDialog(frame, line, "!!!", JOptionPane.INFORMATION_MESSAGE);
+                }
             }
+            else{
+                frame.dispose();
+                break;
+            }
+        }
+    }
+
+    private void resetClient() {
+        textField.setEditable(false);
+        messageArea.setText("");
+        roomArea.setText("");
+        userArea.setText("You are not in a room");
+        runClient();
+    }
+
+    private void runClient() {
+        try {
+            run();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -201,7 +236,6 @@ public class Client {
             roomArea.append(room + "\n");
         }
     }
-
 
     private void showCreateRoomDialog() {
         JPanel panel = new JPanel(new GridLayout(2, 2));
@@ -220,16 +254,19 @@ public class Client {
                 try {
                     int limit = Integer.parseInt(limitText);
                     out.println("/create " + roomName + " " + limit);
+                    messageArea.setText("");
                 } catch (NumberFormatException e) {
                     JOptionPane.showMessageDialog(frame, "User limit must be a number.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         }
+        
     }
 
     private void showJoinRoomDialog() {
         String roomName = JOptionPane.showInputDialog(frame, "Enter room name:", "Join Room", JOptionPane.PLAIN_MESSAGE);
         if (roomName != null && !roomName.trim().isEmpty()) {
+            messageArea.setText("");
             out.println("/join " + roomName);
         }
     }

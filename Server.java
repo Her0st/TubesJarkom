@@ -108,7 +108,8 @@ public class Server {
                 while (true) {
                     out.println("SUBMITNAME");
                     name = in.readLine();
-                    if (name == null || name.isEmpty()) {
+                    if (name == null || name.isEmpty() || name.equals("null")) {
+                        out.println("Name must not be empty, Restart the program");
                         return;
                     }
                     synchronized (clients) {
@@ -158,6 +159,8 @@ public class Server {
                         sendRoomInfo();
                     } else if (input.startsWith("/msg ")) {
                         sendMessage(input.substring(5));
+                    } else if (input.startsWith("/logout")) {
+                        logout();
                     } else {
                         out.println("Unknown command");
                     }
@@ -290,6 +293,16 @@ public class Server {
             } else {
                 out.println("You are not in a room.");
             }
+        }
+
+        private void logout() {
+            if (currentRoom != null) {
+                leaveRoom();
+            }
+            clients.remove(name);
+            out.println("LOGOUT");
+            name = null;
+            run();
         }
     }
 }
