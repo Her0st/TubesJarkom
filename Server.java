@@ -9,7 +9,7 @@ public class Server {
 
     public static void main(String[] args) throws Exception {
         System.out.println("Server started...");
-        System.out.println("IP Address to Connect: " + InetAddress.getLocalHost().getHostAddress());
+        // System.out.println("IP Address to Connect: " + InetAddress.getLocalHost().getHostAddress());
         ServerSocket listener = new ServerSocket(PORT);
         try {
             while (true) {
@@ -23,11 +23,17 @@ public class Server {
     private static class Room {
         String name;
         String owner;
+        int limit;
         Set<PrintWriter> clients = new HashSet<>();
 
-        Room(String name, String owner) {
+        Room(String name, String owner, int limit) {
             this.name = name;
             this.owner = owner;
+            this.limit = limit;
+        }
+
+        boolean isFull() {
+            return clients.size() >= limit;
         }
 
         void addClient(PrintWriter out) {
@@ -78,7 +84,7 @@ public class Server {
         }
 
         void sendRoomInfo(PrintWriter out) {
-            out.println("ROOMINFO " + name + " " + owner);
+            // out.println("ROOMINFO " + name + " " + owner + " " + clients.size() + "/" + limit);
         }
     }
 
@@ -123,7 +129,17 @@ public class Server {
                         return;
                     }
                     if (input.startsWith("/create ")) {
-                        createRoom(input.substring(8));
+                        String[] tokens = input.split(" ");
+                        if (tokens.length == 3) {
+                            try {
+                                int limit = Integer.parseInt(tokens[2]);
+                                createRoom(tokens[1], limit);
+                            } catch (NumberFormatException e) {
+                                out.println("Invalid limit.");
+                            }
+                        } else {
+                            out.println("Usage: /create <roomName> <limit>");
+                        }
                     } else if (input.startsWith("/join ")) {
                         joinRoom(input.substring(6));
                     } else if (input.startsWith("/leave")) {
@@ -167,16 +183,21 @@ public class Server {
             if (currentRoom != null) {
                 currentRoom.sendRoomInfo(out);
             } else {
-                out.println("ROOMINFO None None");
+                // out.println("ROOMINFO None None 0/0");
             }
         }
 
-        private void createRoom(String roomName) {
+        private void createRoom(String roomName, int limit) {
             synchronized (chatRooms) {
                 if (!chatRooms.containsKey(roomName)) {
-                    chatRooms.put(roomName, new Room(roomName, name));
-                    out.println("Room " + roomName + " created.");
-                    joinRoom(roomName);
+                    if(limit > 0){
+                        chatRooms.put(roomName, new Room(roomName, name, limit));
+                        // out.println("Room " + roomName + " created with limit " + limit + ".");
+                        joinRoom(roomName);
+                    }
+                    else{
+                        out.println("Room limit must be positive integer");
+                    }
                 } else {
                     out.println("Room " + roomName + " already exists.");
                 }
@@ -186,15 +207,20 @@ public class Server {
         private void joinRoom(String roomName) {
             synchronized (chatRooms) {
                 if (chatRooms.containsKey(roomName)) {
-                    if (currentRoom != null) {
-                        leaveRoom();
+                    Room room = chatRooms.get(roomName);
+                    if (!room.isFull()) {
+                        if (currentRoom != null) {
+                            leaveRoom();
+                        }
+                        currentRoom = room;
+                        currentRoom.addClient(out);
+                        currentRoom.broadcast("MESSAGE " + name + " has joined " + roomName);
+                        currentRoom.broadcastUserList();
+                        currentRoom.listUsers(out);
+                        sendRoomInfo();
+                    } else {
+                        out.println("Room " + roomName + " is full.");
                     }
-                    currentRoom = chatRooms.get(roomName);
-                    currentRoom.addClient(out);
-                    currentRoom.broadcast("MESSAGE " + name + " has joined " + roomName);
-                    currentRoom.broadcastUserList();
-                    currentRoom.listUsers(out);
-                    sendRoomInfo();
                 } else {
                     out.println("Room " + roomName + " does not exist.");
                 }
@@ -215,7 +241,7 @@ public class Server {
             StringBuilder roomList = new StringBuilder("ROOMLIST ");
             synchronized (chatRooms) {
                 for (Room room : chatRooms.values()) {
-                    roomList.append(room.name).append(" (Owner: ").append(room.owner).append("),");
+                    roomList.append(room.name).append(" (Owner: ").append(room.owner).append(", Limit: ").append(room.clients.size()).append("/").append(room.limit).append("),");
                 }
             }
             for (PrintWriter client : clients.values()) {
@@ -231,7 +257,6 @@ public class Server {
                     for (PrintWriter writer : room.clients) {
                         writer.println("MESSAGE The room " + roomName + " is closed. You are disconnected.");
                     }
-                    room.broadcast("KICKEDOUT");
                     chatRooms.remove(roomName);
                     listRooms();
                 } else {
@@ -246,7 +271,6 @@ public class Server {
                     PrintWriter kickedUserOut = clients.get(userName);
                     if (kickedUserOut != null) {
                         kickedUserOut.println("MESSAGE You are kicked out from the room " + currentRoom.name);
-                        kickedUserOut.println("KICKEDOUT");
                         currentRoom.removeClient(kickedUserOut);
                         currentRoom.broadcast("MESSAGE " + userName + " is kicked out from the room.");
                         currentRoom.broadcastUserList();

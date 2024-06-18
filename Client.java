@@ -67,8 +67,8 @@ public class Client {
         roomPanel.setBackground(backgroundColor);
 
         JPanel userPanel = new JPanel();
-        userArea.setText("You are not in a room");
         userPanel.setLayout(new BorderLayout());
+        userArea.setText("You are not in a room");
         userPanel.add(new JScrollPane(userArea), BorderLayout.CENTER);
         userPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(textColor), "Users in Room", 0, 0, font, textColor));
         userPanel.setBackground(backgroundColor);
@@ -160,9 +160,6 @@ public class Client {
             }
         });
     }
-
-
-
     private String getName() {
         return JOptionPane.showInputDialog(
                 frame,
@@ -191,8 +188,8 @@ public class Client {
                 userArea.setText(line.substring(9).replace(",", "\n"));
             } else if (line.startsWith("ROOMLIST")) {
                 updateRoomList(line.substring(9));
-            } else if (line.startsWith("KICKEDOUT")) {
-                userArea.setText("You are not in a room");
+            } else {
+                JOptionPane.showMessageDialog(frame, line, "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -205,12 +202,28 @@ public class Client {
         }
     }
 
-    
 
     private void showCreateRoomDialog() {
-        String roomName = JOptionPane.showInputDialog(frame, "Enter room name:", "Create Room", JOptionPane.PLAIN_MESSAGE);
-        if (roomName != null && !roomName.trim().isEmpty()) {
-            out.println("/create " + roomName);
+        JPanel panel = new JPanel(new GridLayout(2, 2));
+        JTextField roomNameField = new JTextField(10);
+        JTextField limitField = new JTextField(10);
+        panel.add(new JLabel("Room Name (No Space):"));
+        panel.add(roomNameField);
+        panel.add(new JLabel("User Limit:"));
+        panel.add(limitField);
+
+        int result = JOptionPane.showConfirmDialog(frame, panel, "Create Room", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            String roomName = roomNameField.getText().trim();
+            String limitText = limitField.getText().trim();
+            if (!roomName.isEmpty() && !limitText.isEmpty()) {
+                try {
+                    int limit = Integer.parseInt(limitText);
+                    out.println("/create " + roomName + " " + limit);
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(frame, "User limit must be a number.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
         }
     }
 
