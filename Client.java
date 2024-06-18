@@ -105,10 +105,10 @@ public class Client {
             }
         });
 
-        JButton refreshRoomButton = new JButton("Refresh Room");
+        JButton refreshRoomButton = new JButton("Refresh");
         refreshRoomButton.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
-                out.println("/list");
+                out.println("/refresh");
             };
         });
 

@@ -62,8 +62,9 @@ public class Server {
                         createRoom(input.substring(8));
                     } else if (input.startsWith("/join ")) {
                         joinRoom(input.substring(6));
-                    } else if (input.startsWith("/list")) {
+                    } else if (input.startsWith("/refresh")) {
                         listRooms();
+                        sendUserList();
                     } else if (input.startsWith("/msg ")) {
                         sendMessageToRoom(input.substring(5));
                     }
