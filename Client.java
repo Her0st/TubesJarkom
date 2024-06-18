@@ -13,12 +13,46 @@ public class Client {
     JTextArea messageArea = new JTextArea(8, 40);
 
     public Client() {
-        textField.setEditable(false);
-        messageArea.setEditable(false);
-        frame.getContentPane().add(textField, BorderLayout.NORTH);
-        frame.getContentPane().add(new JScrollPane(messageArea), BorderLayout.CENTER);
-        frame.pack();
+        // Setup GUI with dark theme
+        Color backgroundColor = new Color(45, 45, 45);
+        Color textColor = new Color(230, 230, 230);
+        Color textFieldColor = new Color(60, 63, 65);
+        Font font = new Font("SansSerif", Font.PLAIN, 14);
 
+        textField.setEditable(false);
+        textField.setBackground(textFieldColor);
+        textField.setForeground(textColor);
+        textField.setFont(font);
+        
+        messageArea.setEditable(false);
+        messageArea.setBackground(backgroundColor);
+        messageArea.setForeground(textColor);
+        messageArea.setFont(font);
+        messageArea.setLineWrap(true);
+        messageArea.setWrapStyleWord(true);
+
+        // Create panels
+        JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new BorderLayout());
+        inputPanel.add(textField, BorderLayout.CENTER);
+        inputPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        inputPanel.setBackground(backgroundColor);
+
+        JPanel chatPanel = new JPanel();
+        chatPanel.setLayout(new BorderLayout());
+        chatPanel.add(new JScrollPane(messageArea), BorderLayout.CENTER);
+        chatPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(textColor), "Chat Area", 0, 0, font, textColor));
+        chatPanel.setBackground(backgroundColor);
+
+        // Add panels to frame
+        frame.getContentPane().add(inputPanel, BorderLayout.SOUTH);
+        frame.getContentPane().add(chatPanel, BorderLayout.CENTER);
+        frame.getContentPane().setBackground(backgroundColor);
+        frame.setSize(500, 400);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
+
+        // Action listener for text field
         textField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 out.println(textField.getText());
@@ -44,11 +78,13 @@ public class Client {
     }
 
     private void run() throws IOException {
+        // Connect to the server
         String serverAddress = getServerAddress();
         Socket socket = new Socket(serverAddress, 5000);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
 
+        // Process all messages from the server
         while (true) {
             String line = in.readLine();
             if (line.startsWith("SUBMITNAME")) {
@@ -63,8 +99,6 @@ public class Client {
 
     public static void main(String[] args) throws Exception {
         Client client = new Client();
-        client.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        client.frame.setVisible(true);
         client.run();
     }
 }
