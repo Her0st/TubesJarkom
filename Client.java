@@ -96,7 +96,6 @@ public class Client {
         roomPanel.add(roomButtonPanel, BorderLayout.SOUTH);
 
         // Add panels to frame
-        frame.getContentPane().add(refreshPanel, BorderLayout.NORTH);
         frame.getContentPane().add(inputPanel, BorderLayout.SOUTH);
         frame.getContentPane().add(chatPanel, BorderLayout.CENTER);
         frame.getContentPane().add(roomPanel, BorderLayout.EAST);
@@ -136,12 +135,20 @@ public class Client {
         refreshRoomButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 out.println("/refresh");
-            };
+            }
         });
 
-        inputPanel.add(createRoomButton, BorderLayout.WEST);
-        inputPanel.add(joinRoomButton, BorderLayout.EAST);
-        roomPanel.add(refreshRoomButton, BorderLayout.EAST);
+        closeRoomButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                showCloseRoomDialog();
+            }
+        });
+
+        kickUserButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                showKickUserDialog();
+            }
+        });
     }
 
     private String getServerAddress() {
