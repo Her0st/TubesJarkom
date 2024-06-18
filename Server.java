@@ -40,7 +40,7 @@ public class Server {
 
         void broadcast(String message) {
             for (PrintWriter client : clients) {
-                client.println("MESSAGE " + message);
+                client.println(message);
             }
         }
 
@@ -49,14 +49,36 @@ public class Server {
             synchronized (clients) {
                 for (PrintWriter client : clients) {
                     users.append(
-                        Server.clients.entrySet().stream()
-                            .filter(entry -> entry.getValue().equals(client))
-                            .map(Map.Entry::getKey)
-                            .findFirst()
-                            .orElse("Unknown")).append(",");
+                            Server.clients.entrySet().stream()
+                                    .filter(entry -> entry.getValue().equals(client))
+                                    .map(Map.Entry::getKey)
+                                    .findFirst()
+                                    .orElse("Unknown")).append(",");
                 }
             }
             out.println(users.toString());
+        }
+
+        void broadcastUserList() {
+            StringBuilder users = new StringBuilder("USERLIST ");
+            synchronized (clients) {
+                for (PrintWriter client : clients) {
+                    users.append(
+                            Server.clients.entrySet().stream()
+                                    .filter(entry -> entry.getValue().equals(client))
+                                    .map(Map.Entry::getKey)
+                                    .findFirst()
+                                    .orElse("Unknown")).append(",");
+                }
+            }
+            String userListMessage = users.toString();
+            for (PrintWriter client : clients) {
+                client.println(userListMessage);
+            }
+        }
+
+        void sendRoomInfo(PrintWriter out) {
+            out.println("ROOMINFO " + name + " " + owner);
         }
     }
 
@@ -102,45 +124,24 @@ public class Server {
                     }
                     if (input.startsWith("/create ")) {
                         createRoom(input.substring(8));
-                        listRooms();
-                        if (currentRoom != null) {
-                            currentRoom.listUsers(out);
-                        }
                     } else if (input.startsWith("/join ")) {
                         joinRoom(input.substring(6));
-                        listRooms();
-                        if (currentRoom != null) {
-                            currentRoom.listUsers(out);
-                        }
                     } else if (input.startsWith("/leave")) {
                         leaveRoom();
-                        listRooms();
-                        if (currentRoom != null) {
-                            currentRoom.listUsers(out);
-                        }
                     } else if (input.startsWith("/close ")) {
                         closeRoom(input.substring(7));
-                        listRooms();
-                        if (currentRoom != null) {
-                            currentRoom.listUsers(out);
-                        }
                     } else if (input.startsWith("/kick ")) {
                         kickUser(input.substring(6));
-                        listRooms();
-                        if (currentRoom != null) {
-                            currentRoom.listUsers(out);
-                        }
                     } else if (input.startsWith("/refresh")) {
                         listRooms();
                         if (currentRoom != null) {
                             currentRoom.listUsers(out);
+                            sendRoomInfo();
                         }
+                    } else if (input.startsWith("/roominfo")) {
+                        sendRoomInfo();
                     } else if (input.startsWith("/msg ")) {
                         sendMessage(input.substring(5));
-                        listRooms();
-                        if (currentRoom != null) {
-                            currentRoom.listUsers(out);
-                        }
                     } else {
                         out.println("Unknown command");
                     }
@@ -159,6 +160,14 @@ public class Server {
                 } catch (IOException e) {
                     System.out.println(e);
                 }
+            }
+        }
+
+        private void sendRoomInfo() {
+            if (currentRoom != null) {
+                currentRoom.sendRoomInfo(out);
+            } else {
+                out.println("ROOMINFO None None");
             }
         }
 
@@ -182,8 +191,10 @@ public class Server {
                     }
                     currentRoom = chatRooms.get(roomName);
                     currentRoom.addClient(out);
-                    currentRoom.broadcast(name + " has joined " + roomName);
+                    currentRoom.broadcast("MESSAGE " + name + " has joined " + roomName);
+                    currentRoom.broadcastUserList();
                     currentRoom.listUsers(out);
+                    sendRoomInfo();
                 } else {
                     out.println("Room " + roomName + " does not exist.");
                 }
@@ -193,30 +204,36 @@ public class Server {
         private void leaveRoom() {
             if (currentRoom != null) {
                 currentRoom.removeClient(out);
-                currentRoom.broadcast(name + " has left " + currentRoom.name);
+                currentRoom.broadcast("MESSAGE " + name + " has left " + currentRoom.name);
+                currentRoom.broadcastUserList();
                 currentRoom = null;
+                listRooms();
             }
         }
 
         private void listRooms() {
             StringBuilder roomList = new StringBuilder("ROOMLIST ");
             synchronized (chatRooms) {
-                for (String room : chatRooms.keySet()) {
-                    roomList.append(room).append(",");
+                for (Room room : chatRooms.values()) {
+                    roomList.append(room.name).append(" (Owner: ").append(room.owner).append("),");
                 }
             }
-            out.println(roomList.toString());
+            for (PrintWriter client : clients.values()) {
+                client.println(roomList.toString());
+            }
         }
 
         private void closeRoom(String roomName) {
             synchronized (chatRooms) {
                 Room room = chatRooms.get(roomName);
                 if (room != null && room.owner.equals(name)) {
-                    room.broadcast("The room " + roomName + " is closed by the owner.");
+                    room.broadcast("MESSAGE The room " + roomName + " is closed by the owner.");
                     for (PrintWriter writer : room.clients) {
                         writer.println("MESSAGE The room " + roomName + " is closed. You are disconnected.");
                     }
+                    room.broadcast("KICKEDOUT");
                     chatRooms.remove(roomName);
+                    listRooms();
                 } else {
                     out.println("You are not the owner of the room.");
                 }
@@ -229,8 +246,11 @@ public class Server {
                     PrintWriter kickedUserOut = clients.get(userName);
                     if (kickedUserOut != null) {
                         kickedUserOut.println("MESSAGE You are kicked out from the room " + currentRoom.name);
+                        kickedUserOut.println("KICKEDOUT");
                         currentRoom.removeClient(kickedUserOut);
-                        currentRoom.broadcast(userName + " is kicked out from the room.");
+                        currentRoom.broadcast("MESSAGE " + userName + " is kicked out from the room.");
+                        currentRoom.broadcastUserList();
+                        currentRoom.listUsers(out);
                     } else {
                         out.println("User " + userName + " not found in the room.");
                     }
@@ -242,7 +262,7 @@ public class Server {
 
         private void sendMessage(String message) {
             if (currentRoom != null) {
-                currentRoom.broadcast(name + ": " + message);
+                currentRoom.broadcast("MESSAGE " + name + ": " + message);
             } else {
                 out.println("You are not in a room.");
             }

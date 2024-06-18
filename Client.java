@@ -67,6 +67,7 @@ public class Client {
         roomPanel.setBackground(backgroundColor);
 
         JPanel userPanel = new JPanel();
+        userArea.setText("You are not in a room");
         userPanel.setLayout(new BorderLayout());
         userPanel.add(new JScrollPane(userArea), BorderLayout.CENTER);
         userPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(textColor), "Users in Room", 0, 0, font, textColor));
@@ -132,6 +133,7 @@ public class Client {
             public void actionPerformed(ActionEvent e) {
                 out.println("/leave");
                 messageArea.setText("");
+                userArea.setText("You are not in a room");
                 out.println("/refresh");
             }
         });
@@ -147,6 +149,7 @@ public class Client {
         closeRoomButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 showCloseRoomDialog();
+                out.println("/refresh");
             }
         });
 
@@ -160,18 +163,18 @@ public class Client {
 
     private String getServerAddress() {
         return JOptionPane.showInputDialog(
-            frame,
-            "Enter IP Address of the Server:",
-            "Welcome to the Chat Room",
-            JOptionPane.QUESTION_MESSAGE);
+                frame,
+                "Enter IP Address of the Server:",
+                "Welcome to the Chat Room",
+                JOptionPane.QUESTION_MESSAGE);
     }
 
     private String getName() {
         return JOptionPane.showInputDialog(
-            frame,
-            "Choose a screen name:",
-            "Screen name selection",
-            JOptionPane.PLAIN_MESSAGE);
+                frame,
+                "Choose a screen name:",
+                "Screen name selection",
+                JOptionPane.PLAIN_MESSAGE);
     }
 
     private void run() throws IOException {
@@ -193,10 +196,22 @@ public class Client {
             } else if (line.startsWith("USERLIST")) {
                 userArea.setText(line.substring(9).replace(",", "\n"));
             } else if (line.startsWith("ROOMLIST")) {
-                roomArea.setText(line.substring(9).replace(",", "\n"));
+                updateRoomList(line.substring(9));
+            } else if (line.startsWith("KICKEDOUT")) {
+                userArea.setText("You are not in a room");
             }
         }
     }
+
+    private void updateRoomList(String rooms) {
+        roomArea.setText("");
+        String[] roomArray = rooms.split(",");
+        for (String room : roomArray) {
+            roomArea.append(room + "\n");
+        }
+    }
+
+    
 
     private void showCreateRoomDialog() {
         String roomName = JOptionPane.showInputDialog(frame, "Enter room name:", "Create Room", JOptionPane.PLAIN_MESSAGE);
