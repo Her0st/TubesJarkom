@@ -15,14 +15,24 @@ public class Client {
     JTextArea userArea = new JTextArea(8,20);
 
     public Client() {
-        textField.setEditable(false);
-        messageArea.setEditable(false);
-        frame.getContentPane().add(textField, BorderLayout.NORTH);
-        frame.getContentPane().add(new JScrollPane(messageArea), BorderLayout.CENTER);
-        frame.pack();
+        // Setup GUI with dark theme
+        Color backgroundColor = new Color(45, 45, 45);
+        Color textColor = new Color(230, 230, 230);
+        Color textFieldColor = new Color(60, 63, 65);
+        Font font = new Font("SansSerif", Font.PLAIN, 14);
 
-<<<<<<< Updated upstream
-=======
+        textField.setEditable(false);
+        textField.setBackground(textFieldColor);
+        textField.setForeground(textColor);
+        textField.setFont(font);
+        
+        messageArea.setEditable(false);
+        messageArea.setBackground(backgroundColor);
+        messageArea.setForeground(textColor);
+        messageArea.setFont(font);
+        messageArea.setLineWrap(true);
+        messageArea.setWrapStyleWord(true);
+
         roomArea.setEditable(false);
         roomArea.setBackground(backgroundColor);
         roomArea.setForeground(textColor);
@@ -59,7 +69,6 @@ public class Client {
         frame.setVisible(true);
 
         // Action listener for text field
->>>>>>> Stashed changes
         textField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 out.println("/msg " + textField.getText());
@@ -85,11 +94,13 @@ public class Client {
     }
 
     private void run() throws IOException {
+        // Connect to the server
         String serverAddress = getServerAddress();
         Socket socket = new Socket(serverAddress, 5000);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
 
+        // Process all messages from the server
         while (true) {
             String line = in.readLine();
             if (line.startsWith("SUBMITNAME")) {
@@ -126,8 +137,6 @@ public class Client {
 
     public static void main(String[] args) throws Exception {
         Client client = new Client();
-        client.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        client.frame.setVisible(true);
         client.run();
     }
 }
