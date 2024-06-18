@@ -1,12 +1,11 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
     private static final int PORT = 5000;
-    private static ConcurrentHashMap<String, HashSet<PrintWriter>> chatRooms = new ConcurrentHashMap<>();
     private static HashMap<String, PrintWriter> clients = new HashMap<>();
+    private static HashMap<String, HashSet<String>> chatRooms = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
         System.out.println("Server started...");
@@ -23,10 +22,10 @@ public class Server {
 
     private static class Handler extends Thread {
         private String name;
+        private String currentRoom;
         private Socket socket;
         private BufferedReader in;
         private PrintWriter out;
-        private String currentRoom;
 
         public Handler(Socket socket) {
             this.socket = socket;
@@ -52,25 +51,21 @@ public class Server {
                 }
 
                 out.println("NAMEACCEPTED");
-                for (PrintWriter writer : clients.values()) {
-                    writer.println("MESSAGE " + name + " has joined");
-                }
-
+                listRooms();
 
                 while (true) {
                     String input = in.readLine();
+                    if (input == null) {
+                        return;
+                    }
                     if (input.startsWith("/create ")) {
                         createRoom(input.substring(8));
                     } else if (input.startsWith("/join ")) {
                         joinRoom(input.substring(6));
-                    } else if (input.equals("/list")) {
+                    } else if (input.startsWith("/list")) {
                         listRooms();
                     } else if (input.startsWith("/msg ")) {
-                        if (currentRoom != null) {
-                            sendMessageToRoom(currentRoom, name + ": " + input.substring(5));
-                        }
-                    } else {
-                        out.println("Unknown command");
+                        sendMessageToRoom(input.substring(5));
                     }
                 }
             } catch (IOException e) {
@@ -79,7 +74,10 @@ public class Server {
                 if (name != null) {
                     clients.remove(name);
                     if (currentRoom != null) {
-                        leaveRoom(currentRoom);
+                        chatRooms.get(currentRoom).remove(name);
+                        if (chatRooms.get(currentRoom).isEmpty()) {
+                            chatRooms.remove(currentRoom);
+                        }
                     }
                 }
                 if (out != null) {
@@ -93,43 +91,65 @@ public class Server {
         }
 
         private void createRoom(String roomName) {
-            chatRooms.putIfAbsent(roomName, new HashSet<>());
-            out.println("Room " + roomName + " created.");
+            synchronized (chatRooms) {
+                if (!chatRooms.containsKey(roomName)) {
+                    chatRooms.put(roomName, new HashSet<>());
+                    joinRoom(roomName);
+                } else {
+                    out.println("MESSAGE Room already exists");
+                }
+            }
         }
 
         private void joinRoom(String roomName) {
-            if (!chatRooms.containsKey(roomName)) {
-                out.println("Room " + roomName + " does not exist.");
-                return;
+            synchronized (chatRooms) {
+                if (chatRooms.containsKey(roomName)) {
+                    if (currentRoom != null) {
+                        chatRooms.get(currentRoom).remove(name);
+                    }
+                    chatRooms.get(roomName).add(name);
+                    currentRoom = roomName;
+                    out.println("MESSAGE Joined room " + roomName);
+                    sendUserList();
+                } else {
+                    out.println("MESSAGE Room does not exist");
+                }
             }
-            if (currentRoom != null) {
-                leaveRoom(currentRoom);
-            }
-            currentRoom = roomName;
-            chatRooms.get(roomName).add(out);
-            sendMessageToRoom(roomName, name + " has joined " + roomName);
         }
 
-        private void leaveRoom(String roomName) {
-            if (currentRoom != null) {
-                chatRooms.get(roomName).remove(out);
-                sendMessageToRoom(roomName, name + " has left " + roomName);
-                currentRoom = null;
+        private void sendMessageToRoom(String message) {
+            synchronized (chatRooms) {
+                if (currentRoom != null) {
+                    for (String user : chatRooms.get(currentRoom)) {
+                        PrintWriter writer = clients.get(user);
+                        writer.println("MESSAGE " + name + ": " + message);
+                    }
+                } else {
+                    out.println("MESSAGE You are not in any room");
+                }
             }
         }
 
         private void listRooms() {
-            StringBuilder roomList = new StringBuilder("Available rooms:\n");
-            for (String room : chatRooms.keySet()) {
-                roomList.append(room).append("\n");
+            StringBuilder rooms = new StringBuilder();
+            synchronized (chatRooms) {
+                for (String room : chatRooms.keySet()) {
+                    rooms.append(room).append(",");
+                }
             }
-            out.println(roomList.toString());
+            out.println("ROOMLIST " + rooms.toString());
         }
 
-        private void sendMessageToRoom(String roomName, String message) {
-            for (PrintWriter writer : chatRooms.get(roomName)) {
-                writer.println("MESSAGE " + message);
+        private void sendUserList() {
+            StringBuilder users = new StringBuilder();
+            synchronized (chatRooms) {
+                if (currentRoom != null) {
+                    for (String user : chatRooms.get(currentRoom)) {
+                        users.append(user).append(",");
+                    }
+                }
             }
+            out.println("USERLIST " + users.toString());
         }
     }
 }

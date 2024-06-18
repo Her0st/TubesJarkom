@@ -12,7 +12,7 @@ public class Client {
     JTextField textField = new JTextField(40);
     JTextArea messageArea = new JTextArea(8, 40);
     JTextArea roomArea = new JTextArea(8, 20);
-    JTextArea userArea = new JTextArea(8,20);
+    JTextArea userArea = new JTextArea(8, 20);
 
     public Client() {
         // Setup GUI with dark theme
@@ -40,6 +40,13 @@ public class Client {
         roomArea.setLineWrap(true);
         roomArea.setWrapStyleWord(true);
 
+        userArea.setEditable(false);
+        userArea.setBackground(backgroundColor);
+        userArea.setForeground(textColor);
+        userArea.setFont(font);
+        userArea.setLineWrap(true);
+        userArea.setWrapStyleWord(true);
+
         // Create panels
         JPanel inputPanel = new JPanel();
         inputPanel.setLayout(new BorderLayout());
@@ -59,12 +66,19 @@ public class Client {
         roomPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(textColor), "Available Rooms", 0, 0, font, textColor));
         roomPanel.setBackground(backgroundColor);
 
+        JPanel userPanel = new JPanel();
+        userPanel.setLayout(new BorderLayout());
+        userPanel.add(new JScrollPane(userArea), BorderLayout.CENTER);
+        userPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(textColor), "Users in Room", 0, 0, font, textColor));
+        userPanel.setBackground(backgroundColor);
+
         // Add panels to frame
         frame.getContentPane().add(inputPanel, BorderLayout.SOUTH);
         frame.getContentPane().add(chatPanel, BorderLayout.CENTER);
         frame.getContentPane().add(roomPanel, BorderLayout.EAST);
+        frame.getContentPane().add(userPanel, BorderLayout.WEST);
         frame.getContentPane().setBackground(backgroundColor);
-        frame.setSize(600, 400);
+        frame.setSize(800, 400);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
 
@@ -75,6 +89,24 @@ public class Client {
                 textField.setText("");
             }
         });
+
+        // Buttons for creating and joining rooms
+        JButton createRoomButton = new JButton("Create Room");
+        createRoomButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                showCreateRoomDialog();
+            }
+        });
+
+        JButton joinRoomButton = new JButton("Join Room");
+        joinRoomButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                showJoinRoomDialog();
+            }
+        });
+
+        inputPanel.add(createRoomButton, BorderLayout.WEST);
+        inputPanel.add(joinRoomButton, BorderLayout.EAST);
     }
 
     private String getServerAddress() {
@@ -129,10 +161,6 @@ public class Client {
         if (roomName != null && !roomName.trim().isEmpty()) {
             out.println("/join " + roomName);
         }
-    }
-
-    private void requestRoomList() {
-        out.println("/list");
     }
 
     public static void main(String[] args) throws Exception {
