@@ -117,23 +117,29 @@ public class Client {
         createRoomButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 showCreateRoomDialog();
+                out.println("/refresh");
             }
         });
 
         joinRoomButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 showJoinRoomDialog();
+                out.println("/refresh");
             }
         });
 
         leaveRoomButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 out.println("/leave");
+                messageArea.setText("");
+                out.println("/refresh");
             }
         });
 
         refreshRoomButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                roomArea.setText("");
+                userArea.setText("");
                 out.println("/refresh");
             }
         });
@@ -147,6 +153,7 @@ public class Client {
         kickUserButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 showKickUserDialog();
+                out.println("/refresh");
             }
         });
     }

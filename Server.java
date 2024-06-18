@@ -102,14 +102,34 @@ public class Server {
                     }
                     if (input.startsWith("/create ")) {
                         createRoom(input.substring(8));
+                        listRooms();
+                        if (currentRoom != null) {
+                            currentRoom.listUsers(out);
+                        }
                     } else if (input.startsWith("/join ")) {
                         joinRoom(input.substring(6));
+                        listRooms();
+                        if (currentRoom != null) {
+                            currentRoom.listUsers(out);
+                        }
                     } else if (input.startsWith("/leave")) {
                         leaveRoom();
+                        listRooms();
+                        if (currentRoom != null) {
+                            currentRoom.listUsers(out);
+                        }
                     } else if (input.startsWith("/close ")) {
                         closeRoom(input.substring(7));
+                        listRooms();
+                        if (currentRoom != null) {
+                            currentRoom.listUsers(out);
+                        }
                     } else if (input.startsWith("/kick ")) {
                         kickUser(input.substring(6));
+                        listRooms();
+                        if (currentRoom != null) {
+                            currentRoom.listUsers(out);
+                        }
                     } else if (input.startsWith("/refresh")) {
                         listRooms();
                         if (currentRoom != null) {
@@ -117,6 +137,10 @@ public class Server {
                         }
                     } else if (input.startsWith("/msg ")) {
                         sendMessage(input.substring(5));
+                        listRooms();
+                        if (currentRoom != null) {
+                            currentRoom.listUsers(out);
+                        }
                     } else {
                         out.println("Unknown command");
                     }
