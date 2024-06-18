@@ -5,6 +5,20 @@
             "name": "Client",
             "request": "launch",
             "mainClass": "Client",
+            "projectName": "TubesJarkom_354e3c19"
+        },
+        {
+            "type": "java",
+            "name": "Server",
+            "request": "launch",
+            "mainClass": "Server",
+            "projectName": "TubesJarkom_354e3c19"
+        },
+        {
+            "type": "java",
+            "name": "Client",
+            "request": "launch",
+            "mainClass": "Client",
             "projectName": "TubesJarkom_6aaedf0d"
         },
         {

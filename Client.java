@@ -105,8 +105,16 @@ public class Client {
             }
         });
 
+        JButton refreshRoomButton = new JButton("Refresh Room");
+        refreshRoomButton.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e){
+                out.println("/list");
+            };
+        });
+
         inputPanel.add(createRoomButton, BorderLayout.WEST);
         inputPanel.add(joinRoomButton, BorderLayout.EAST);
+        roomPanel.add(refreshRoomButton, BorderLayout.EAST);
     }
 
     private String getServerAddress() {
