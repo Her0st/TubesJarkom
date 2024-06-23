@@ -88,11 +88,13 @@ public class Client {
         inputPanel.add(buttonPanel, BorderLayout.NORTH);
 
         JPanel roomButtonPanel = new JPanel();
-        roomButtonPanel.setLayout(new GridLayout(3, 1, 10, 10));
+        roomButtonPanel.setLayout(new GridLayout(4, 1, 10, 5));
         roomButtonPanel.setBackground(backgroundColor);
         JButton refreshRoomButton = new JButton("Refresh");
         JButton closeRoomButton = new JButton("Close Room");
         JButton kickUserButton = new JButton("Kick User");
+        JButton clearChatButton = new JButton("Clear Chat");
+        roomButtonPanel.add(clearChatButton);
         roomButtonPanel.add(refreshRoomButton);
         roomButtonPanel.add(closeRoomButton);
         roomButtonPanel.add(kickUserButton);
@@ -104,10 +106,15 @@ public class Client {
         frame.getContentPane().add(roomPanel, BorderLayout.EAST);
         frame.getContentPane().add(userPanel, BorderLayout.WEST);
         frame.getContentPane().setBackground(backgroundColor);
-        frame.setSize(800, 400);
+        frame.setSize(800, 500);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
 
+        clearChatButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e){
+                messageArea.setText("");
+            };
+        });
         // Action listener for text field
         textField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
