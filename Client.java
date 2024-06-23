@@ -228,6 +228,7 @@ public class Client {
                     updateRoomList(line.substring(9));
                 }else if(line.startsWith("LEAVE")){
                     out.println("/leave");
+                    messagePane.setText("");
                 } 
                 else if (line.startsWith("LOGOUT")) {
                     resetClient();
