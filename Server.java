@@ -1,16 +1,35 @@
+import java.awt.BorderLayout;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+
+import javax.swing.*;
 
 public class Server {
     private static final int PORT = 5000;
     private static Map<String, PrintWriter> clients = new HashMap<>();
     private static Map<String, Room> chatRooms = new HashMap<>();
 
+    
     public static void main(String[] args) throws Exception {
         System.out.println("Server started...");
         // System.out.println("IP Address to Connect: " + InetAddress.getLocalHost().getHostAddress());
         ServerSocket listener = new ServerSocket(PORT);
+
+        JFrame frame = new JFrame("Server IP Address");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(300, 100);
+        JLabel ipLabel = new JLabel("Server IP Address: ", SwingConstants.CENTER);
+        frame.getContentPane().add(ipLabel, BorderLayout.CENTER);
+
+        // Get the local IP address
+        String ipAddress = InetAddress.getLocalHost().getHostAddress();
+        ipLabel.setText("Server IP Address: " + ipAddress);
+
+        // Display the window.
+        frame.setVisible(true);
+
+
         try {
             while (true) {
                 new Handler(listener.accept()).start();
