@@ -178,9 +178,17 @@ public class Client {
                 JOptionPane.PLAIN_MESSAGE);
     }
 
+    private String getIP() {
+        return JOptionPane.showInputDialog(
+                frame,
+                "Insert server IP:",
+                "Server IP Input",
+                JOptionPane.PLAIN_MESSAGE);
+    }
+
     private void run() throws IOException {
         // Connect to the server
-        String serverAddress = InetAddress.getLocalHost().getHostAddress();
+        String serverAddress = getIP();
         Socket socket = new Socket(serverAddress, 5000);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
