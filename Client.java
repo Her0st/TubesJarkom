@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -10,9 +11,10 @@ public class Client {
     PrintWriter out;
     JFrame frame = new JFrame("Chat Room");
     JTextField textField = new JTextField(40);
-    JTextArea messageArea = new JTextArea(8, 40);
+    JTextPane messagePane = new JTextPane();
     JTextArea roomArea = new JTextArea(8, 20);
     JTextArea userArea = new JTextArea(8, 20);
+    StyledDocument doc;
 
     public Client() {
         // Setup GUI with dark theme
@@ -26,12 +28,12 @@ public class Client {
         textField.setForeground(textColor);
         textField.setFont(font);
 
-        messageArea.setEditable(false);
-        messageArea.setBackground(backgroundColor);
-        messageArea.setForeground(textColor);
-        messageArea.setFont(font);
-        messageArea.setLineWrap(true);
-        messageArea.setWrapStyleWord(true);
+        messagePane.setEditable(false);
+        messagePane.setBackground(backgroundColor);
+        messagePane.setForeground(textColor);
+        messagePane.setFont(font);
+        messagePane.setMargin(new Insets(10, 10, 10, 10));
+        doc = messagePane.getStyledDocument();
 
         roomArea.setEditable(false);
         roomArea.setBackground(backgroundColor);
@@ -56,7 +58,7 @@ public class Client {
 
         JPanel chatPanel = new JPanel();
         chatPanel.setLayout(new BorderLayout());
-        chatPanel.add(new JScrollPane(messageArea), BorderLayout.CENTER);
+        chatPanel.add(new JScrollPane(messagePane), BorderLayout.CENTER);
         chatPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(textColor), "Chat Area", 0, 0, font, textColor));
         chatPanel.setBackground(backgroundColor);
 
@@ -112,13 +114,15 @@ public class Client {
 
         clearChatButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e){
-                messageArea.setText("");
+                messagePane.setText("");
             };
         });
         // Action listener for text field
         textField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                out.println("/msg " + textField.getText());
+                String message = textField.getText();
+                out.println("/msg " + message);
+                appendMessage("You: " + message, StyleConstants.ALIGN_RIGHT);
                 textField.setText("");
             }
         });
@@ -141,7 +145,7 @@ public class Client {
         leaveRoomButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 out.println("/leave");
-                messageArea.setText("");
+                messagePane.setText("");
                 userArea.setText("You are not in a room");
                 out.println("/refresh");
             }
@@ -176,7 +180,6 @@ public class Client {
         });
     }
 
-
     private String getName() {
         return JOptionPane.showInputDialog(
                 frame,
@@ -193,6 +196,8 @@ public class Client {
                 JOptionPane.PLAIN_MESSAGE);
     }
 
+    String userName;
+
     private void run() throws IOException {
         // Connect to the server
         String serverAddress = getIP();
@@ -203,13 +208,18 @@ public class Client {
         // Process all messages from the server
         while (true) {
             String line = in.readLine();
-            if(line != null){
+            if (line != null) {
                 if (line.startsWith("SUBMITNAME")) {
-                    out.println(getName());
+                    String msgSubmitName = getName();
+                    out.println(msgSubmitName);
+                    userName=msgSubmitName;
                 } else if (line.startsWith("NAMEACCEPTED")) {
                     textField.setEditable(true);
                 } else if (line.startsWith("MESSAGE")) {
-                    messageArea.append(line.substring(8) + "\n");
+                    System.out.println(line.substring(8).startsWith(userName));
+                    if(!line.substring(8).startsWith(userName)){
+                        appendMessage(line.substring(8), StyleConstants.ALIGN_LEFT);
+                    }
                 } else if (line.startsWith("USERLIST")) {
                     userArea.setText(line.substring(9).replace(",", "\n"));
                 } else if (line.startsWith("ROOMLIST")) {
@@ -220,8 +230,7 @@ public class Client {
                 } else {
                     JOptionPane.showMessageDialog(frame, line, "!!!", JOptionPane.INFORMATION_MESSAGE);
                 }
-            }
-            else{
+            } else {
                 frame.dispose();
                 break;
             }
@@ -230,7 +239,7 @@ public class Client {
 
     private void resetClient() {
         textField.setEditable(false);
-        messageArea.setText("");
+        messagePane.setText("");
         roomArea.setText("");
         userArea.setText("You are not in a room");
         runClient();
@@ -269,19 +278,18 @@ public class Client {
                 try {
                     int limit = Integer.parseInt(limitText);
                     out.println("/create " + roomName + " " + limit);
-                    messageArea.setText("");
+                    messagePane.setText("");
                 } catch (NumberFormatException e) {
                     JOptionPane.showMessageDialog(frame, "User limit must be a number.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         }
-        
     }
 
     private void showJoinRoomDialog() {
         String roomName = JOptionPane.showInputDialog(frame, "Enter room name:", "Join Room", JOptionPane.PLAIN_MESSAGE);
         if (roomName != null && !roomName.trim().isEmpty()) {
-            messageArea.setText("");
+            messagePane.setText("");
             out.println("/join " + roomName);
         }
     }
@@ -300,8 +308,22 @@ public class Client {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    private void appendMessage(String message, int alignment) {
+        SimpleAttributeSet set = new SimpleAttributeSet();
+        StyleConstants.setAlignment(set, alignment);
+        StyleConstants.setForeground(set, Color.WHITE);
+        StyleConstants.setFontFamily(set, "SansSerif");
+        StyleConstants.setFontSize(set, 14);
+        try {
+            doc.insertString(doc.getLength(), message + "\n", set);
+            doc.setParagraphAttributes(doc.getLength(), 1, set, false);
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
         Client client = new Client();
-        client.run();
+        client.runClient();
     }
 }
