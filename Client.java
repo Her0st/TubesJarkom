@@ -226,7 +226,10 @@ public class Client {
                     userArea.setText(line.substring(9).replace(",", "\n"));
                 } else if (line.startsWith("ROOMLIST")) {
                     updateRoomList(line.substring(9));
-                } else if (line.startsWith("LOGOUT")) {
+                }else if(line.startsWith("LEAVE")){
+                    out.println("/leave");
+                } 
+                else if (line.startsWith("LOGOUT")) {
                     resetClient();
                     break;
                 } else {

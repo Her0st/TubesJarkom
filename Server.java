@@ -278,6 +278,7 @@ public class Server {
                     room.broadcast("MESSAGE The room " + roomName + " is closed by the owner.");
                     for (PrintWriter writer : room.clients) {
                         writer.println("MESSAGE The room " + roomName + " is closed. You are disconnected.");
+                        writer.println("LEAVE");
                     }
                     chatRooms.remove(roomName);
                     listRooms();
@@ -293,6 +294,7 @@ public class Server {
                     PrintWriter kickedUserOut = clients.get(userName);
                     if (kickedUserOut != null) {
                         kickedUserOut.println("MESSAGE You are kicked out from the room " + currentRoom.name);
+                        kickedUserOut.println("LEAVE");
                         currentRoom.removeClient(kickedUserOut);
                         currentRoom.broadcast("MESSAGE " + userName + " is kicked out from the room.");
                         currentRoom.broadcastUserList();
