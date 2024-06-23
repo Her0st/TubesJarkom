@@ -216,7 +216,7 @@ public class Client {
                 } else if (line.startsWith("NAMEACCEPTED")) {
                     textField.setEditable(true);
                 } else if (line.startsWith("MESSAGE")) {
-                    System.out.println(line.substring(8).startsWith(userName));
+                    // System.out.println(line.substring(8).startsWith(userName));
                     if(!line.substring(8).startsWith(userName)){
                         appendMessage(line.substring(8), StyleConstants.ALIGN_LEFT);
                     }
@@ -315,8 +315,8 @@ public class Client {
         StyleConstants.setFontFamily(set, "SansSerif");
         StyleConstants.setFontSize(set, 14);
         try {
-            doc.insertString(doc.getLength(), message + "\n", set);
             doc.setParagraphAttributes(doc.getLength(), 1, set, false);
+            doc.insertString(doc.getLength(), message + "\n", set);
         } catch (BadLocationException e) {
             e.printStackTrace();
         }
