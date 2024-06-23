@@ -12,7 +12,7 @@ public class Client {
     JFrame frame = new JFrame("Chat Room");
     JTextField textField = new JTextField(40);
     JTextPane messagePane = new JTextPane();
-    JTextArea roomArea = new JTextArea(8, 20);
+    JTextArea roomArea = new JTextArea(8, 20);  
     JTextArea userArea = new JTextArea(8, 20);
     StyledDocument doc;
 
@@ -23,6 +23,8 @@ public class Client {
         Color textFieldColor = new Color(60, 63, 65);
         Font font = new Font("SansSerif", Font.PLAIN, 14);
 
+        DefaultCaret caret = (DefaultCaret)messagePane.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
         textField.setEditable(false);
         textField.setBackground(textFieldColor);
         textField.setForeground(textColor);
