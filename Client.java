@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -10,7 +11,10 @@ public class Client {
     PrintWriter out;
     JFrame frame = new JFrame("Chat Room");
     JTextField textField = new JTextField(40);
-    JTextArea messageArea = new JTextArea(8, 40);
+    JTextPane messagePane = new JTextPane();
+    JTextArea roomArea = new JTextArea(8, 20);  
+    JTextArea userArea = new JTextArea(8, 20);
+    StyledDocument doc;
 
     public Client() {
         // Setup GUI with dark theme
@@ -19,19 +23,12 @@ public class Client {
         Color textFieldColor = new Color(60, 63, 65);
         Font font = new Font("SansSerif", Font.PLAIN, 14);
 
+        DefaultCaret caret = (DefaultCaret)messagePane.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
         textField.setEditable(false);
         textField.setBackground(textFieldColor);
         textField.setForeground(textColor);
         textField.setFont(font);
-<<<<<<< Updated upstream
-        
-        messageArea.setEditable(false);
-        messageArea.setBackground(backgroundColor);
-        messageArea.setForeground(textColor);
-        messageArea.setFont(font);
-        messageArea.setLineWrap(true);
-        messageArea.setWrapStyleWord(true);
-=======
         textField.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         messagePane.setEditable(false);
@@ -56,21 +53,11 @@ public class Client {
         userArea.setLineWrap(true);
         userArea.setWrapStyleWord(true);
         userArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
->>>>>>> Stashed changes
 
         // Create panels
         JPanel inputPanel = new RoundedPanel(15, backgroundColor);
         inputPanel.setLayout(new BorderLayout());
         inputPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-<<<<<<< Updated upstream
-        inputPanel.setBackground(backgroundColor);
-
-        JPanel chatPanel = new JPanel();
-        chatPanel.setLayout(new BorderLayout());
-        chatPanel.add(new JScrollPane(messageArea), BorderLayout.CENTER);
-        chatPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(textColor), "Chat Area", 0, 0, font, textColor));
-        chatPanel.setBackground(backgroundColor);
-=======
 
         // Panel for buttons
         JPanel buttonPanel = new JPanel(new GridLayout(1, 4, 10, 10));
@@ -119,31 +106,83 @@ public class Client {
         roomButtonPanel.add(closeRoomButton);
         roomButtonPanel.add(kickUserButton);
         roomPanel.add(roomButtonPanel, BorderLayout.SOUTH);
->>>>>>> Stashed changes
 
         // Add panels to frame
         frame.getContentPane().add(inputPanel, BorderLayout.SOUTH);
         frame.getContentPane().add(chatPanel, BorderLayout.CENTER);
+        frame.getContentPane().add(roomPanel, BorderLayout.EAST);
+        frame.getContentPane().add(userPanel, BorderLayout.WEST);
         frame.getContentPane().setBackground(backgroundColor);
-        frame.setSize(500, 400);
+        frame.setSize(800, 500);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
 
+        clearChatButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e){
+                messagePane.setText("");
+            };
+        });
         // Action listener for text field
         textField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                out.println(textField.getText());
+                String message = textField.getText();
+                out.println("/msg " + message);
+                appendMessage("You: " + message, StyleConstants.ALIGN_RIGHT);
                 textField.setText("");
             }
         });
-    }
 
-    private String getServerAddress() {
-        return JOptionPane.showInputDialog(
-            frame,
-            "Enter IP Address of the Server:",
-            "Welcome to the Chat Room",
-            JOptionPane.QUESTION_MESSAGE);
+        // Action listeners for buttons
+        createRoomButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                showCreateRoomDialog();
+                out.println("/refresh");
+            }
+        });
+
+        joinRoomButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                showJoinRoomDialog();
+                out.println("/refresh");
+            }
+        });
+
+        leaveRoomButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                out.println("/leave");
+                messagePane.setText("");
+                userArea.setText("You are not in a room");
+                out.println("/refresh");
+            }
+        });
+
+        refreshRoomButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                roomArea.setText("");
+                userArea.setText("");
+                out.println("/refresh");
+            }
+        });
+
+        closeRoomButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                showCloseRoomDialog();
+                out.println("/refresh");
+            }
+        });
+
+        kickUserButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                showKickUserDialog();
+                out.println("/refresh");
+            }
+        });
+
+        logoutButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                out.println("/logout");
+            }
+        });
     }
 
     private JButton createCustomButton(String text) {
@@ -159,15 +198,25 @@ public class Client {
 
     private String getName() {
         return JOptionPane.showInputDialog(
-            frame,
-            "Choose a screen name:",
-            "Screen name selection",
-            JOptionPane.PLAIN_MESSAGE);
+                frame,
+                "Choose a screen name:",
+                "Screen name selection",
+                JOptionPane.PLAIN_MESSAGE);
     }
+
+    private String getIP() {
+        return JOptionPane.showInputDialog(
+                frame,
+                "Insert server IP:",
+                "Server IP Input",
+                JOptionPane.PLAIN_MESSAGE);
+    }
+
+    String userName;
 
     private void run() throws IOException {
         // Connect to the server
-        String serverAddress = getServerAddress();
+        String serverAddress = getIP();
         Socket socket = new Socket(serverAddress, 5000);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
@@ -175,14 +224,6 @@ public class Client {
         // Process all messages from the server
         while (true) {
             String line = in.readLine();
-<<<<<<< Updated upstream
-            if (line.startsWith("SUBMITNAME")) {
-                out.println(getName());
-            } else if (line.startsWith("NAMEACCEPTED")) {
-                textField.setEditable(true);
-            } else if (line.startsWith("MESSAGE")) {
-                messageArea.append(line.substring(8) + "\n");
-=======
             if (line != null) {
                 if (line.startsWith("SUBMITNAME")) {
                     String msgSubmitName = getName();
@@ -207,14 +248,98 @@ public class Client {
             } else {
                 frame.dispose();
                 break;
->>>>>>> Stashed changes
             }
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    private void resetClient() {
+        textField.setEditable(false);
+        messagePane.setText("");
+        roomArea.setText("");
+        userArea.setText("You are not in a room");
+        runClient();
+    }
+
+    private void runClient() {
+        try {
+            run();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateRoomList(String rooms) {
+        roomArea.setText("");
+        String[] roomArray = rooms.split(",");
+        for (String room : roomArray) {
+            roomArea.append(room + "\n");
+        }
+    }
+
+    private void showCreateRoomDialog() {
+        JPanel panel = new JPanel(new GridLayout(2, 2));
+        JTextField roomNameField = new JTextField(10);
+        JTextField limitField = new JTextField(10);
+        panel.add(new JLabel("Room Name (No Space):"));
+        panel.add(roomNameField);
+        panel.add(new JLabel("User Limit:"));
+        panel.add(limitField);
+
+        int result = JOptionPane.showConfirmDialog(frame, panel, "Create Room", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            String roomName = roomNameField.getText().trim();
+            String limitText = limitField.getText().trim();
+            if (!roomName.isEmpty() && !limitText.isEmpty()) {
+                try {
+                    int limit = Integer.parseInt(limitText);
+                    out.println("/create " + roomName + " " + limit);
+                    messagePane.setText("");
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(frame, "User limit must be a number.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
+    }
+
+    private void showJoinRoomDialog() {
+        String roomName = JOptionPane.showInputDialog(frame, "Enter room name:", "Join Room", JOptionPane.PLAIN_MESSAGE);
+        if (roomName != null && !roomName.trim().isEmpty()) {
+            messagePane.setText("");
+            out.println("/join " + roomName);
+        }
+    }
+
+    private void showCloseRoomDialog() {
+        String roomName = JOptionPane.showInputDialog(frame, "Enter room name to close:", "Close Room", JOptionPane.PLAIN_MESSAGE);
+        if (roomName != null && !roomName.trim().isEmpty()) {
+            out.println("/close " + roomName);
+        }
+    }
+
+    private void showKickUserDialog() {
+        String userName = JOptionPane.showInputDialog(frame, "Enter user name to kick:", "Kick User", JOptionPane.PLAIN_MESSAGE);
+        if (userName != null && !userName.trim().isEmpty()) {
+            out.println("/kick " + userName);
+        }
+    }
+
+    private void appendMessage(String message, int alignment) {
+        SimpleAttributeSet set = new SimpleAttributeSet();
+        StyleConstants.setAlignment(set, alignment);
+        StyleConstants.setForeground(set, Color.WHITE);
+        StyleConstants.setFontFamily(set, "SansSerif");
+        StyleConstants.setFontSize(set, 14);
+        try {
+            doc.setParagraphAttributes(doc.getLength(), 1, set, false);
+            doc.insertString(doc.getLength(), message + "\n", set);
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
         Client client = new Client();
-        client.run();
+        client.runClient();
     }
 }
 
