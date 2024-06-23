@@ -17,7 +17,6 @@ public class Client {
     StyledDocument doc;
 
     public Client() {
-        // Setup GUI with dark theme
         Color backgroundColor = new Color(45, 45, 45);
         Color textColor = new Color(230, 230, 230);
         Color textFieldColor = new Color(60, 63, 65);
@@ -29,6 +28,7 @@ public class Client {
         textField.setBackground(textFieldColor);
         textField.setForeground(textColor);
         textField.setFont(font);
+        textField.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         messagePane.setEditable(false);
         messagePane.setBackground(backgroundColor);
@@ -43,6 +43,7 @@ public class Client {
         roomArea.setFont(font);
         roomArea.setLineWrap(true);
         roomArea.setWrapStyleWord(true);
+        roomArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         userArea.setEditable(false);
         userArea.setBackground(backgroundColor);
@@ -50,61 +51,62 @@ public class Client {
         userArea.setFont(font);
         userArea.setLineWrap(true);
         userArea.setWrapStyleWord(true);
+        userArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Create panels
-        JPanel inputPanel = new JPanel();
+        
+        JPanel inputPanel = new RoundedPanel(15, backgroundColor);
         inputPanel.setLayout(new BorderLayout());
-        inputPanel.add(textField, BorderLayout.CENTER);
         inputPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        inputPanel.setBackground(backgroundColor);
 
-        JPanel chatPanel = new JPanel();
-        chatPanel.setLayout(new BorderLayout());
-        chatPanel.add(new JScrollPane(messagePane), BorderLayout.CENTER);
-        chatPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(textColor), "Chat Area", 0, 0, font, textColor));
-        chatPanel.setBackground(backgroundColor);
-
-        JPanel roomPanel = new JPanel();
-        roomPanel.setLayout(new BorderLayout());
-        roomPanel.add(new JScrollPane(roomArea), BorderLayout.CENTER);
-        roomPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(textColor), "Available Rooms", 0, 0, font, textColor));
-        roomPanel.setBackground(backgroundColor);
-
-        JPanel userPanel = new JPanel();
-        userPanel.setLayout(new BorderLayout());
-        userArea.setText("You are not in a room");
-        userPanel.add(new JScrollPane(userArea), BorderLayout.CENTER);
-        userPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(textColor), "Users in Room", 0, 0, font, textColor));
-        userPanel.setBackground(backgroundColor);
-
-        // Panel for buttons
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new GridLayout(1, 4, 10, 10));
+        
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 4, 10, 10));
         buttonPanel.setBackground(backgroundColor);
-        JButton createRoomButton = new JButton("Create Room");
-        JButton joinRoomButton = new JButton("Join Room");
-        JButton leaveRoomButton = new JButton("Leave Room");
-        JButton logoutButton = new JButton("Logout");
+        JButton createRoomButton = createCustomButton("Create Room");
+        JButton joinRoomButton = createCustomButton("Join Room");
+        JButton leaveRoomButton = createCustomButton("Leave Room");
+        JButton logoutButton = createCustomButton("Logout");
         buttonPanel.add(createRoomButton);
         buttonPanel.add(joinRoomButton);
         buttonPanel.add(leaveRoomButton);
         buttonPanel.add(logoutButton);
         inputPanel.add(buttonPanel, BorderLayout.NORTH);
 
-        JPanel roomButtonPanel = new JPanel();
-        roomButtonPanel.setLayout(new GridLayout(4, 1, 10, 5));
+        
+        JPanel textFieldPanel = new JPanel(new BorderLayout());
+        textFieldPanel.setBackground(backgroundColor);
+        textFieldPanel.add(textField, BorderLayout.CENTER);
+        textFieldPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        inputPanel.add(textFieldPanel, BorderLayout.SOUTH);
+
+        JPanel chatPanel = new RoundedPanel(15, backgroundColor);
+        chatPanel.setLayout(new BorderLayout());
+        chatPanel.add(new JScrollPane(messagePane), BorderLayout.CENTER);
+        chatPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(textColor), "Chat Area", 0, 0, font, textColor));
+
+        JPanel roomPanel = new RoundedPanel(15, backgroundColor);
+        roomPanel.setLayout(new BorderLayout());
+        roomPanel.add(new JScrollPane(roomArea), BorderLayout.CENTER);
+        roomPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(textColor), "Available Rooms", 0, 0, font, textColor));
+
+        JPanel userPanel = new RoundedPanel(15, backgroundColor);
+        userPanel.setLayout(new BorderLayout());
+        userArea.setText("You are not in a room");
+        userPanel.add(new JScrollPane(userArea), BorderLayout.CENTER);
+        userPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(textColor), "Users in Room", 0, 0, font, textColor));
+
+        JPanel roomButtonPanel = new JPanel(new GridLayout(4, 1, 10, 5));
         roomButtonPanel.setBackground(backgroundColor);
-        JButton refreshRoomButton = new JButton("Refresh");
-        JButton closeRoomButton = new JButton("Close Room");
-        JButton kickUserButton = new JButton("Kick User");
-        JButton clearChatButton = new JButton("Clear Chat");
+        JButton refreshRoomButton = createCustomButton("Refresh");
+        JButton closeRoomButton = createCustomButton("Close Room");
+        JButton kickUserButton = createCustomButton("Kick User");
+        JButton clearChatButton = createCustomButton("Clear Chat");
         roomButtonPanel.add(clearChatButton);
         roomButtonPanel.add(refreshRoomButton);
         roomButtonPanel.add(closeRoomButton);
         roomButtonPanel.add(kickUserButton);
         roomPanel.add(roomButtonPanel, BorderLayout.SOUTH);
 
-        // Add panels to frame
+        
         frame.getContentPane().add(inputPanel, BorderLayout.SOUTH);
         frame.getContentPane().add(chatPanel, BorderLayout.CENTER);
         frame.getContentPane().add(roomPanel, BorderLayout.EAST);
@@ -119,7 +121,7 @@ public class Client {
                 messagePane.setText("");
             };
         });
-        // Action listener for text field
+        
         textField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 String message = textField.getText();
@@ -129,7 +131,7 @@ public class Client {
             }
         });
 
-        // Action listeners for buttons
+        
         createRoomButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 showCreateRoomDialog();
@@ -182,6 +184,18 @@ public class Client {
         });
     }
 
+    private JButton createCustomButton(String text) {
+        JButton button = new JButton(text);
+        button.setBackground(new Color(70, 73, 75));
+        button.setForeground(new Color(230, 230, 230));
+        button.setFont(new Font("SansSerif", Font.BOLD, 14));
+        button.setBorder(BorderFactory.createLineBorder(new Color(45, 45, 45)));
+        button.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15)); 
+        button.setFocusPainted(false); 
+        return button;
+    }
+
+
     private String getName() {
         return JOptionPane.showInputDialog(
                 frame,
@@ -201,13 +215,13 @@ public class Client {
     String userName;
 
     private void run() throws IOException {
-        // Connect to the server
+        
         String serverAddress = getIP();
         Socket socket = new Socket(serverAddress, 5000);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
 
-        // Process all messages from the server
+        
         while (true) {
             String line = in.readLine();
             if (line != null) {
@@ -218,7 +232,7 @@ public class Client {
                 } else if (line.startsWith("NAMEACCEPTED")) {
                     textField.setEditable(true);
                 } else if (line.startsWith("MESSAGE")) {
-                    // System.out.println(line.substring(8).startsWith(userName));
+                    
                     if(!line.substring(8).startsWith(userName)){
                         appendMessage(line.substring(8), StyleConstants.ALIGN_LEFT);
                     }
@@ -331,5 +345,25 @@ public class Client {
     public static void main(String[] args) {
         Client client = new Client();
         client.runClient();
+    }
+}
+
+class RoundedPanel extends JPanel {
+    private int cornerRadius;
+    private Color backgroundColor;
+
+    public RoundedPanel(int cornerRadius, Color backgroundColor) {
+        this.cornerRadius = cornerRadius;
+        this.backgroundColor = backgroundColor;
+        setOpaque(false);
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setColor(backgroundColor);
+        g2.fillRoundRect(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius);
     }
 }

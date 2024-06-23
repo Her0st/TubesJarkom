@@ -22,11 +22,11 @@ public class Server {
         JLabel ipLabel = new JLabel("Server IP Address: ", SwingConstants.CENTER);
         frame.getContentPane().add(ipLabel, BorderLayout.CENTER);
 
-        // Get the local IP address
+        
         String ipAddress = InetAddress.getLocalHost().getHostAddress();
         ipLabel.setText("Server IP Address: " + ipAddress);
 
-        // Display the window.
+        
         frame.setVisible(true);
 
 
@@ -123,7 +123,7 @@ public class Server {
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 out = new PrintWriter(socket.getOutputStream(), true);
 
-                // Request name from client
+                
                 while (true) {
                     out.println("SUBMITNAME");
                     name = in.readLine();
@@ -142,7 +142,7 @@ public class Server {
                 out.println("NAMEACCEPTED " + name);
                 listRooms();
 
-                // Command handling loop
+                
                 while (true) {
                     String input = in.readLine();
                     if (input == null) {
