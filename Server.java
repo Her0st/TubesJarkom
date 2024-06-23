@@ -293,8 +293,8 @@ public class Server {
                 if (currentRoom != null && currentRoom.owner.equals(name)) {
                     PrintWriter kickedUserOut = clients.get(userName);
                     if (kickedUserOut != null) {
-                        kickedUserOut.println("MESSAGE You are kicked out from the room " + currentRoom.name);
                         kickedUserOut.println("LEAVE");
+                        kickedUserOut.println("MESSAGE You are kicked out from the room " + currentRoom.name);
                         currentRoom.removeClient(kickedUserOut);
                         currentRoom.broadcast("MESSAGE " + userName + " is kicked out from the room.");
                         currentRoom.broadcastUserList();
