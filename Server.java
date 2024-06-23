@@ -263,7 +263,7 @@ public class Server {
             StringBuilder roomList = new StringBuilder("ROOMLIST ");
             synchronized (chatRooms) {
                 for (Room room : chatRooms.values()) {
-                    roomList.append(room.name).append(" (Owner: ").append(room.owner).append(" ; Limit: ").append(room.clients.size()).append("/").append(room.limit).append("),");
+                    roomList.append(room.name).append(" (Owner: ").append(room.owner).append(" | Limit: ").append(room.clients.size()).append("/").append(room.limit).append("),");
                 }
             }
             for (PrintWriter client : clients.values()) {
